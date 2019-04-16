@@ -51,6 +51,7 @@ defmodule RabbitHole.Task.Consumer do
 
   def handle_info({:basic_deliver, message, _meta}, state) do
     state.processor.(Task.from_message(message), self())
+    run_task(Task.from_message(message))
     {:noreply, state}
   end
 
@@ -58,6 +59,26 @@ defmodule RabbitHole.Task.Consumer do
     {:ok, _} = Basic.cancel(state.chan, state.tag)
     :ok = Channel.close(state.chan)
     :ok = Connection.close(state.conn)
+  end
+
+  # Helpers
+
+  defp run_task(%Task.Fun{fun: fun, args: args}) do
+    result = fun.(args)
+    IO.puts("Fun task result: #{inspect result}")
+  end
+
+  defp run_task(%Task.MFA{mod: mod, fun: fun, args: args}) do
+    result = Kernel.apply(mod, fun, [args])
+    IO.puts("MFA task result: #{inspect result}")
+  end
+
+  defp run_task(%Task.Other{val: val}) do
+    IO.puts("Other task: #{inspect val}")
+  end
+
+  defp run_task(_) do
+    IO.puts("unknown task.")
   end
 
   defp default_processor(msg), do: IO.puts("Got message: #{inspect msg}")
