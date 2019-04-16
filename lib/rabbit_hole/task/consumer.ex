@@ -16,7 +16,7 @@ defmodule RabbitHole.Task.Consumer do
 
   @spec start(Exchange.t(), Task.kind(), opts()) :: {:ok, consumer_ref()}
   def start(task_exchange, task_kind, opts \\ []) do
-    GenServer.start_link(__MODULE__, [{:exchange, task_exchange}, {:task_kind, task_kind} ]++ opts)
+    GenServer.start_link(__MODULE__, [{:exchange, task_exchange}, {:task_kind, task_kind} | opts])
   end
 
   @spec stop(consumer_ref()) :: :ok
